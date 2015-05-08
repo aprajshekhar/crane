@@ -13,7 +13,7 @@ test_requirements = open(_test_req_path).read()
 
 setup(
     name='crane',
-    version=crane.version,
+    version=wsgi.version,
     packages=find_packages(exclude=['tests', 'tests.*']),
     url='http://www.pulpproject.org',
     license='GPLv2+',
@@ -24,7 +24,7 @@ setup(
     tests_require=test_requirements,
     test_suite='unittest2.collector',
     package_data={
-        'crane': ['data/*.conf', 'templates/*.html', 'static/css/*', 'static/js/*',
+        'wsgi': ['data/*.conf', 'templates/*.html', 'static/css/*', 'static/js/*',
                   'static/fonts/*', 'static/img/*']
     },
 )
