@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-import wsgi
+import crane
 
 
 _abs_dir = os.path.dirname(os.path.abspath(__file__))
@@ -13,7 +13,7 @@ test_requirements = open(_test_req_path).read()
 
 setup(
     name='crane',
-    version=wsgi.version,
+    version=crane.version,
     packages=find_packages(exclude=['tests', 'tests.*']),
     url='http://www.pulpproject.org',
     license='GPLv2+',
@@ -24,7 +24,7 @@ setup(
     tests_require=test_requirements,
     test_suite='unittest2.collector',
     package_data={
-        'wsgi': ['data/*.conf', 'templates/*.html', 'static/css/*', 'static/js/*',
+        'crane': ['data/*.conf', 'templates/*.html', 'static/css/*', 'static/js/*',
                   'static/fonts/*', 'static/img/*']
     },
 )
