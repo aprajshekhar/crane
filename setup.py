@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-import crane
+import wsgi
 
 
 _abs_dir = os.path.dirname(os.path.abspath(__file__))
