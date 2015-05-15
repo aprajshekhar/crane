@@ -65,7 +65,7 @@ def monitor_data_dir(app, last_modified=0):
     """
     data_dir = ''
     if os.environ['OPENSHIFT_DATA_DIR']:
-        data_dir = environ['OPENSHIFT_DATA_DIR']
+        data_dir = os.environ['OPENSHIFT_DATA_DIR']
     else:
         data_dir = app.config[config.KEY_DATA_DIR]
     polling_interval = app.config[config.KEY_DATA_POLLING_INTERVAL]
