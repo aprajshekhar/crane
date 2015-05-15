@@ -50,10 +50,24 @@ def load(app):
         _logger.error('could not open default config file')
         raise
 
-    # load user-specified config values         
-    if  not os.environ['OPENSHIFT_DATA_DIR']:
-        load_config(app)
+    # load user-specified config values
+    config_path = os.environ.get(CONFIG_ENV_NAME) or CONFIG_PATH
         
+    try:
+        with open(config_path) as config_file:
+            parser = ConfigParser()
+            parser.readfp(config_file)
+        read_config(app, parser)
+        _logger.info('config loaded from %s' % config_path)
+    except IOError:
+        if config_path != CONFIG_PATH:
+            _logger.error('config file not found at path %s' % config_path)
+            raise
+        # if the user did not specify a config path and there is not a file
+        # at the default path, just use the default settings.
+        _logger.info('no config specified or found, so using defaults')
+
+
 def read_config(app, parser):
     """
     Read the configuration from the parser, and apply it to the app
@@ -95,29 +109,6 @@ def read_config(app, parser):
         for key in (KEY_URL,):
             with supress(NoOptionError):
                 section[key] = parser.get(SECTION_SOLR, key)
-
-def load_config(app):
-    """
-    Load the configuration and apply it to the app.
-
-    :param app: a flask app
-    :type  app: Flask
-   
-    """ 
-    config_path = os.environ.get(CONFIG_ENV_NAME) or CONFIG_PATH
-    try:
-        with open(config_path) as config_file:
-            parser = ConfigParser()
-            parser.readfp(config_file)
-        read_config(app, parser)
-        _logger.info('config loaded from %s' % config_path)
-    except IOError:
-        if config_path != CONFIG_PATH:
-            _logger.error('config file not found at path %s' % config_path)
-            raise
-        # if the user did not specify a config path and there is not a file
-        # at the default path, just use the default settings.
-        _logger.info('no config specified or found, so using defaults')
 
 
 @contextmanager
