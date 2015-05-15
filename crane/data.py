@@ -109,9 +109,13 @@ def load_all(app):
     global response_data
     repos = {}
     images = {}
-
+    data_dir = ''
     try:
-        data_dir = app.config[config.KEY_DATA_DIR]
+         if  os.environ['OPENSHIFT_DATA_DIR']:
+             data_dir =  os.environ['OPENSHIFT_DATA_DIR']
+        else:
+            data_dir = app.config[config.KEY_DATA_DIR]
+            
         logging.info('loading metadata from %s' % data_dir)
         paths = glob.glob(os.path.join(data_dir, '*.json'))
 
