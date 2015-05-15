@@ -51,7 +51,11 @@ def load(app):
         raise
 
     # load user-specified config values
-    config_path = os.environ.get(CONFIG_ENV_NAME) or CONFIG_PATH
+    if  os.environ['OPENSHIFT_DATA_DIR'] and not os.environ['OPENSHIFT_DATA_DIR'].isSpace():
+        config_path =  os.environ['OPENSHIFT_DATA_DIR']
+    else:
+        config_path = os.environ.get(CONFIG_ENV_NAME) or CONFIG_PATH
+        
     try:
         with open(config_path) as config_file:
             parser = ConfigParser()
