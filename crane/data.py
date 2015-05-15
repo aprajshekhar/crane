@@ -113,7 +113,7 @@ def load_all(app):
     try:
          if  os.environ['OPENSHIFT_DATA_DIR']:
              data_dir =  os.environ['OPENSHIFT_DATA_DIR']
-        else:
+         else:
             data_dir = app.config[config.KEY_DATA_DIR]
             
         logging.info('loading metadata from %s' % data_dir)
