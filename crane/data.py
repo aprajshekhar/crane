@@ -64,7 +64,7 @@ def monitor_data_dir(app, last_modified=0):
     :type  last_modified:   int or float
     """
     data_dir = ''
-    if environ['OPENSHIFT_DATA_DIR']:
+    if os.environ['OPENSHIFT_DATA_DIR']:
         data_dir = environ['OPENSHIFT_DATA_DIR']
     else:
         data_dir = app.config[config.KEY_DATA_DIR]
