@@ -52,6 +52,7 @@ def load(app):
 
     # load user-specified config values
     config_path = os.environ.get(CONFIG_ENV_NAME) or CONFIG_PATH
+        
     try:
         with open(config_path) as config_file:
             parser = ConfigParser()
