@@ -4,3 +4,4 @@
 # before the deploy step.  This script gets executed directly, so it
 # could be python, php, ruby, etc.
 cp ${OPENSHIFT_REPO_DIR}tests/data/metadata_good/baz.json ${OPENSHIFT_DATA_DIR}repodata-new.json
+echo "Copied the metada"
