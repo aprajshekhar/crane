@@ -1,5 +1,3 @@
 Flask>=0.9
 # for pkg_resources
 setuptools
-M2Crypto
-git+https://github.com/candlepin/python-rhsm.git@python-rhsm-1.13.10-1

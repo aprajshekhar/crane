@@ -64,7 +64,7 @@ def monitor_data_dir(app, last_modified=0):
     :type  last_modified:   int or float
     """
     data_dir = ''
-    if os.environ['OPENSHIFT_DATA_DIR']:
+    if 'OPENSHIFT_DATA_DIR' in os.environ:
         data_dir = os.environ['OPENSHIFT_DATA_DIR']
     else:
         data_dir = app.config[config.KEY_DATA_DIR]
@@ -115,7 +115,7 @@ def load_all(app):
     images = {}
     data_dir = ''
     try:
-        if  os.environ['OPENSHIFT_DATA_DIR']:
+        if 'OPENSHIFT_DATA_DIR' in os.environ:
              data_dir =  os.environ['OPENSHIFT_DATA_DIR']
         else:
             data_dir = app.config[config.KEY_DATA_DIR]            
