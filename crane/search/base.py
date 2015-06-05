@@ -92,10 +92,7 @@ class HTTPBackend(SearchBackend):
         """
         try:
             # one second timeout
-            #response = urllib2.urlopen(url, timeout=1)
-            request = urllib2.Request(url)
-            request.add_header('Accept', 'application/json')
-            response = urllib2.urlopen(request)
+            response = urllib2.urlopen(url, timeout=1)
         except socket.timeout:
             _logger.error('timeout communicating with backend search service')
             raise exceptions.HTTPError(httplib.GATEWAY_TIMEOUT)
