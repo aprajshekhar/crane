@@ -38,9 +38,9 @@ class Solr(HTTPBackend):
         quoted_query = urllib.quote(query)
         url = self.url_template.format(quoted_query)
         _logger.debug('searching with URL: %s' % url)
-
+        logging.info('searching with URL: %s' % url)
         body = self._get_data(url)
-
+        logging.info('data: %s' % body)
         results = self._parse(body)
         filtered_results = itertools.ifilter(self._filter_result, results)
         return itertools.imap(self._format_result, filtered_results)
