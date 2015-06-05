@@ -1,0 +1,4 @@
+AuthType Basic
+AuthName "Crane CI"
+AuthUserFile ${OPENSHIFT_DATA_DIR}.htpasswd
+Require valid-user
