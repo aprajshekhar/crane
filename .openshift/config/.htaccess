@@ -1,0 +1,4 @@
+AuthType Basic
+AuthName "Top Secret"
+AuthUserFile ${OPENSHIFT_REPO_DIR}/php/appfolder/.htpasswd
+Require valid-user
