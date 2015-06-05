@@ -1,7 +1,13 @@
 # This runs crane (http://github.com/pulp/crane) on centos6
 #
 # Example usage:
-# $ sudo docker run -p 5000:80 -v /home/you/cranedata:/var/lib/crane/metadata pulp/crane
+# In the topmost directory of crane
+# $ sudo docker build -t crane .
+# $ docker run -p 80:80 -v ~/tests/data/metadata_good/:/var/lib/crane/metadata crane
+# Test:
+# curl -vu tom:redhat -X GET $DOCKER_IMAGE_IP/v1/_ping
+# Search backends are not configured. Please do so in crane/data/default_config.conf before issuing docker build
+
 
 FROM centos:centos7
 MAINTAINER Pulp Team <pulp-list@redhat.com>
@@ -33,7 +39,4 @@ ENV APACHE_RUN_USER apache
 ENV APACHE_RUN_GROUP apache
 
 EXPOSE 80
-#ENTRYPOINT ["/usr/bin/python", "/usr/local/src/crane/run.py"]
 CMD ["/bin/bash", "/start.sh"]
-#CMD [/usr/local/src/crane/run.py]
-#CMD ["/bin/bash"]
