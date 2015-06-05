@@ -39,7 +39,8 @@ class Solr(HTTPBackend):
         url = self.url_template.format(quoted_query)
         _logger.debug('searching with URL: %s' % url)
         body = self._get_data(url)
-        
+        #only for debugging
+        _logger.info('data received from solr: %s' % body)
         results = self._parse(body)
         filtered_results = itertools.ifilter(self._filter_result, results)
         return itertools.imap(self._format_result, filtered_results)
