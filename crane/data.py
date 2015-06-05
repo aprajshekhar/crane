@@ -64,10 +64,7 @@ def monitor_data_dir(app, last_modified=0):
     :type  last_modified:   int or float
     """
     data_dir = ''
-    if os.environ['OPENSHIFT_DATA_DIR']:
-        data_dir = os.environ['OPENSHIFT_DATA_DIR']
-    else:
-        data_dir = app.config[config.KEY_DATA_DIR]
+    data_dir = app.config[config.KEY_DATA_DIR]
     polling_interval = app.config[config.KEY_DATA_POLLING_INTERVAL]
     if not os.path.exists(data_dir):
         logging.error('The data directory specified does not exist: %s' % data_dir)
@@ -113,12 +110,10 @@ def load_all(app):
     global response_data
     repos = {}
     images = {}
-    data_dir = ''
+    
     try:
-        if  os.environ['OPENSHIFT_DATA_DIR']:
-             data_dir =  os.environ['OPENSHIFT_DATA_DIR']
-        else:
-            data_dir = app.config[config.KEY_DATA_DIR]            
+        
+        data_dir = app.config[config.KEY_DATA_DIR]            
         logging.info('loading metadata from %s' % data_dir)
         paths = glob.glob(os.path.join(data_dir, '*.json'))
 
