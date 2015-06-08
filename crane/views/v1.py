@@ -112,6 +112,7 @@ def search():
         raise exceptions.HTTPError(httplib.BAD_REQUEST, message='parameter "q" is required')
 
     data = list(search_package.backend.search(query))
+    _logger.info(data)
     response = {
         'query': query,
         'num_results': len(data),
