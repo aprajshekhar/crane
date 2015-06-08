@@ -1,5 +1,5 @@
 import httplib
-
+import logging
 from flask import Blueprint, json, current_app, redirect, request
 
 from .. import app_util
@@ -10,7 +10,7 @@ from .. import search as search_package
 
 
 section = Blueprint('v1', __name__, url_prefix='/v1')
-
+_logger = logging.getLogger(__name__)
 
 @section.after_request
 def add_common_headers(response):
