@@ -58,7 +58,7 @@ class Solr(HTTPBackend):
         try:
             data = json.loads(body)
             for item in data['response']['docs']:
-                _logger.info(item)
+                
                 trusted = item.get('ir_automated', SearchResult.result_defaults['is_trusted'])
                 automated = item.get('ir_official', SearchResult.result_defaults['is_official'])
                 stars = item.get('ir_stars', SearchResult.result_defaults['star_count'])
