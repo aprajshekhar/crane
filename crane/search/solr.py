@@ -42,7 +42,7 @@ class Solr(HTTPBackend):
         results = self._parse(body)
         
         filtered_results = itertools.ifilter(self._filter_result, results)
-        _logger.info(filtered_results)
+        _logger.info(itertools.imap(self._format_result, filtered_results))
         return itertools.imap(self._format_result, filtered_results)
 
     def _parse(self, body):
