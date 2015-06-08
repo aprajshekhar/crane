@@ -40,6 +40,7 @@ class Solr(HTTPBackend):
         _logger.debug('searching with URL: %s' % url)
         body = self._get_data(url)
         results = self._parse(body)
+        _logger.info(results)
         filtered_results = itertools.ifilter(self._filter_result, results)
         return itertools.imap(self._format_result, filtered_results)
 
