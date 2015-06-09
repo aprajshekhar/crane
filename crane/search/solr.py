@@ -41,9 +41,9 @@ class Solr(HTTPBackend):
         body = self._get_data(url)
         results = self._parse(body)
         
-        filtered_results = itertools.ifilter(self._filter_result, results)
-        _logger.info(itertools.imap(self._format_result, filtered_results))
-        return itertools.imap(self._format_result, filtered_results)
+        #filtered_results = itertools.ifilter(self._filter_result, results)
+        #_logger.info(itertools.imap(self._format_result, filtered_results))
+        return itertools.imap(self._format_result, results)
 
     def _parse(self, body):
         """
