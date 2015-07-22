@@ -119,6 +119,19 @@ class TestAuthorizeName(FlaskContextBase):
         self.assertEquals(result, 'foo')
 
     @mock.patch('crane.app_util._get_certificate')
+    def test_if_protected_but_invalid(self, mock_get_cert):
+        cert = certificate.create_from_file(demo_data.demo_entitlement_cert_path)
+        mock_get_cert.return_value = cert
+        with self.assertRaises(exceptions.HTTPError) as assertion:
+            mock_name_func('protected')
+        self.assertEqual(assertion.exception.status_code, httplib.NOT_FOUND)
+
+    def test_if_protected_but_no_cert(self):
+        with self.assertRaises(exceptions.HTTPError) as assertion:
+            mock_name_func('protected')
+        self.assertEqual(assertion.exception.status_code, httplib.NOT_FOUND)
+
+    @mock.patch('crane.app_util._get_certificate')
     def test_bypass_if_not_protected(self, mock_get_cert):
         cert = certificate.create_from_file(demo_data.demo_entitlement_cert_path)
         mock_get_cert.return_value = cert

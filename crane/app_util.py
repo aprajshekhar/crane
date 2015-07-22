@@ -229,7 +229,6 @@ def name_authorized(name):
 
     if repo_tuple_v2.protected:
         cert = _get_certificate()
-         
         if not cert or not cert.check_path(repo_tuple_v2.url_path):
             # return 404 so we don't reveal the existence of repos that the user
             # is not authorized for
