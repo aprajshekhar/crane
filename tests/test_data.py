@@ -20,6 +20,10 @@ def _reset_response_data():
             'repos': {},
             'images': {},
         }
+    data.response_data_v2 = \
+        {
+            'repos': {}
+        }
 
 
 class TestLoadFromFile(unittest.TestCase):
@@ -30,18 +34,19 @@ class TestLoadFromFile(unittest.TestCase):
         self.assertEqual(repo_tuple.url, 'http://cdn.redhat.com/foo/bar/images/')
         self.assertEqual(repo_tuple.url_path, '/foo/bar/images/')
 
-        images = json.loads(repo_tuple.images_json)
-        self.assertTrue({'id': 'abc123'} in images)
-        self.assertTrue({'id': 'xyz789'} in images)
-
-        tags = json.loads(repo_tuple.tags_json)
-        self.assertEqual(tags.get('latest'), 'abc123')
+        # only v1 metadata file contains images and tags information,
+        # hence need to check name of the tuple
+        if repo_tuple.__class__.__name__=='Repo':
+            images = json.loads(repo_tuple.images_json)
+            self.assertTrue({'id': 'abc123'} in images)
+            self.assertTrue({'id': 'xyz789'} in images)
+            tags = json.loads(repo_tuple.tags_json)
+            self.assertEqual(tags.get('latest'), 'abc123')
 
     def test_wrong_version(self):
         self.assertRaises(ValueError, data.load_from_file, demo_data.wrong_version_path)
 
 
-@mock.patch('glob.glob', spec_set=True)
 class TestLoadAll(unittest.TestCase):
 
     def setUp(self):
@@ -53,8 +58,10 @@ class TestLoadAll(unittest.TestCase):
         """
         _reset_response_data()
 
-    def test_with_metadata_good(self, mock_glob):
-        mock_glob.return_value = [demo_data.foo_metadata_path]
+    @mock.patch('os.walk', return_value=[
+                (demo_data.metadata_good_path, ('', ),
+                 ('bar.json', 'baz.json', 'foo.json', 'nop.json', 'qux.json'))])
+    def test_with_metadata_good(self, mock_walk):
         mock_app = mock.MagicMock()
 
         data.load_all(mock_app)
@@ -71,9 +78,23 @@ class TestLoadAll(unittest.TestCase):
         self.assertEqual(data.response_data['repos'].get('redhat/foo').url,
                          'http://cdn.redhat.com/foo/bar/images/')
 
+    @mock.patch('os.walk', return_value=[
+                (demo_data.metadata_good_path_v2, ('', ), ('bar.json', ))])
+    def test_with_v2_metadata_good(self, mock_walk):
+        mock_app = mock.MagicMock()
+
+        data.load_all(mock_app)
+
+        # make sure the Repo namedtuple is in the right place
+        self.assertTrue(isinstance(data.response_data_v2['repos'].get('bar'), data.Repo_v2))
+        # spot-check a value
+        self.assertEqual(data.response_data_v2['repos'].get('bar').url,
+                         'http://cdn.redhat.com/bar/baz/images')
+
     @mock.patch.object(data.logger, 'error', spec_set=True)
-    def test_with_metadata_bad(self, mock_error, mock_glob):
-        mock_glob.return_value = [demo_data.wrong_version_path]
+    @mock.patch('os.walk', return_value=[
+                (demo_data.metadata_bad_path, ('', ), ('wrong_version.json', ))])
+    def test_with_metadata_bad(self, mock_error, mock_walk):
         mock_app = mock.MagicMock()
 
         data.load_all(mock_app)
@@ -86,8 +107,9 @@ class TestLoadAll(unittest.TestCase):
         self.assertEqual(mock_error.call_count, 1)
 
     @mock.patch.object(data.logger, 'error', spec_set=True)
-    def test_with_wrong_path(self, mock_error, mock_glob):
-        mock_glob.return_value = ['/a/b/c/d.json']
+    @mock.patch('os.walk', return_value=[
+                (demo_data.metadata_bad_path, ('', ), ('wrong_version_1.json', ))])
+    def test_with_wrong_path(self, mock_error, mock_walk):
         mock_app = mock.MagicMock()
 
         data.load_all(mock_app)

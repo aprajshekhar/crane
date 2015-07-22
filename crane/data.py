@@ -1,11 +1,10 @@
 from collections import namedtuple
-import glob
 import logging
 import os
 import threading
 import time
 import urlparse
-
+import fnmatch
 from flask import json
 
 from . import config
@@ -18,7 +17,12 @@ response_data = {
     'images': {},
 }
 
+response_data_v2 = {
+    'repos': {}
+}
+
 Repo = namedtuple('Repo', ['url', 'images_json', 'tags_json', 'url_path', 'protected'])
+Repo_v2 = namedtuple('Repo_v2', ['url', 'url_path', 'protected'])
 
 
 def load_from_file(path):
@@ -38,18 +42,23 @@ def load_from_file(path):
         repo_data = json.load(json_file)
 
     # for now, we only support version 1 of the metadata schema
-    if repo_data['version'] != 1:
+    if repo_data['version'] not in (1, 2):
         raise ValueError('metadata version %d not supported' % repo_data['version'])
 
     repo_id = repo_data['repo-registry-id']
-    image_ids = [image['id'] for image in repo_data['images']]
     url_path = urlparse.urlparse(repo_data['url']).path
-    repo_tuple = Repo(repo_data['url'],
-                      json.dumps(repo_data['images']),
-                      json.dumps(repo_data['tags']),
-                      url_path, repo_data.get('protected', False))
 
-    return repo_id, repo_tuple, image_ids
+    if repo_data['version'] == 1:
+        image_ids = [image['id'] for image in repo_data['images']]
+        repo_tuple = Repo(repo_data['url'],
+                          json.dumps(repo_data['images']),
+                          json.dumps(repo_data['tags']),
+                          url_path, repo_data.get('protected', False))
+        return repo_id, repo_tuple, image_ids
+    elif repo_data['version'] == 2:
+        repo_tuple = Repo_v2(repo_data['url'],
+                             url_path, repo_data.get('protected', False))
+        return repo_id, repo_tuple, None
 
 
 def monitor_data_dir(app, last_modified=0):
@@ -106,6 +115,9 @@ def load_all(app):
     :param app: the flask application
     :type  app: flask.Flask
     """
+    global response_data_v2
+    repos_v2 = {}
+
     global response_data
     repos = {}
     images = {}
@@ -113,24 +125,31 @@ def load_all(app):
     try:
         data_dir = app.config[config.KEY_DATA_DIR]
         logging.info('loading metadata from %s' % data_dir)
-        paths = glob.glob(os.path.join(data_dir, '*.json'))
-
+        # scan data dir recursively and pick json files
+        paths = [os.path.join(dirpath, f)
+                 for dirpath, dirnames, files in os.walk(data_dir)
+                 for f in fnmatch.filter(files, '*.json')]
+        print(paths)
         # load data from each file
         for metadata_file_path in paths:
             repo_id, repo_tuple, image_ids = load_from_file(metadata_file_path)
-            repos[repo_id] = repo_tuple
-            for image_id in image_ids:
-                images.setdefault(image_id, set()).add(repo_id)
+            if image_ids:
+                repos[repo_id] = repo_tuple
+                for image_id in image_ids:
+                    images.setdefault(image_id, set()).add(repo_id)
+            else:
+                repos_v2[repo_id] = repo_tuple
 
         # make each set immutable
         for image_id in images.keys():
             images[image_id] = frozenset(images[image_id])
-
         # replace old data structure with new
         response_data = {
             'repos': repos,
             'images': images,
         }
-
+        response_data_v2 = {
+            'repos': repos_v2
+        }
     except Exception, e:
         logger.error('aborting metadata load: %s' % str(e))

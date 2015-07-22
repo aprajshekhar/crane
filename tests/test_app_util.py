@@ -22,6 +22,11 @@ def mock_image_func(image_id, repo_info):
     return 'foo'
 
 
+@app_util.authorize_name
+def mock_name_func(repo_id):
+    return 'foo'
+
+
 class FlaskContextBase(base.BaseCraneAPITest):
 
     def setUp(self):
@@ -74,6 +79,49 @@ class TestAuthorizeRepoId(FlaskContextBase):
         mock_get_cert.return_value = cert
         with self.assertRaises(exceptions.HTTPError) as assertion:
             mock_repo_func('qux')
+        self.assertEqual(assertion.exception.status_code, httplib.NOT_FOUND)
+
+
+class TestAuthorizeName(FlaskContextBase):
+
+    def test_raises_not_found_if_repo_id_none(self):
+        with self.assertRaises(exceptions.HTTPError) as assertion:
+            mock_name_func(None)
+        self.assertEqual(assertion.exception.status_code, httplib.NOT_FOUND)
+
+    def test_raises_not_found_if_repo_id_invalid(self):
+        with self.assertRaises(exceptions.HTTPError) as assertion:
+            mock_name_func('bad_id')
+        self.assertEqual(assertion.exception.status_code, httplib.NOT_FOUND)
+
+    @mock.patch('crane.app_util._get_certificate')
+    def test_raises_not_found_if_id_invalid(self, mock_get_cert):
+        cert = certificate.create_from_file(demo_data.demo_entitlement_cert_path)
+        mock_get_cert.return_value = cert
+        with self.assertRaises(exceptions.HTTPError) as assertion:
+            mock_name_func('qux')
+        self.assertEqual(assertion.exception.status_code, httplib.NOT_FOUND)
+
+    @mock.patch('crane.app_util._get_certificate')
+    def test_passes_if_auth_valid(self, mock_get_cert):
+        cert = certificate.create_from_file(demo_data.demo_entitlement_cert_path)
+        mock_get_cert.return_value = cert
+        result = mock_name_func('bar')
+        self.assertEquals(result, 'foo')
+
+    @mock.patch('crane.app_util._get_certificate')
+    def test_bypass_if_not_protected(self, mock_get_cert):
+        cert = certificate.create_from_file(demo_data.demo_entitlement_cert_path)
+        mock_get_cert.return_value = cert
+        result = mock_name_func('bar')
+        self.assertEquals(result, 'foo')
+
+    @mock.patch('crane.app_util._get_certificate')
+    def test_auth_fails_if_no_path_matches_credentials(self, mock_get_cert):
+        cert = certificate.create_from_file(demo_data.demo_entitlement_cert_path)
+        mock_get_cert.return_value = cert
+        with self.assertRaises(exceptions.HTTPError) as assertion:
+            mock_repo_func('bar1')
         self.assertEqual(assertion.exception.status_code, httplib.NOT_FOUND)
 
 
