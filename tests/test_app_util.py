@@ -106,14 +106,23 @@ class TestAuthorizeName(FlaskContextBase):
     def test_passes_if_auth_valid(self, mock_get_cert):
         cert = certificate.create_from_file(demo_data.demo_entitlement_cert_path)
         mock_get_cert.return_value = cert
-        result = mock_name_func('bar')
+        # cert.check_path = mock.Mock(return_value=True)
+        result = mock_name_func('v2/bar')
+        self.assertEquals(result, 'foo')
+
+    @mock.patch('crane.app_util._get_certificate')
+    def test_if_protected(self, mock_get_cert):
+        cert = certificate.create_from_file(demo_data.demo_entitlement_cert_path)
+        cert.check_path = mock.Mock(return_value=True)
+        mock_get_cert.return_value = cert
+        result = mock_name_func('protected')
         self.assertEquals(result, 'foo')
 
     @mock.patch('crane.app_util._get_certificate')
     def test_bypass_if_not_protected(self, mock_get_cert):
         cert = certificate.create_from_file(demo_data.demo_entitlement_cert_path)
         mock_get_cert.return_value = cert
-        result = mock_name_func('bar')
+        result = mock_name_func('v2/bar')
         self.assertEquals(result, 'foo')
 
     @mock.patch('crane.app_util._get_certificate')

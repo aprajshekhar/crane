@@ -34,14 +34,11 @@ class TestLoadFromFile(unittest.TestCase):
         self.assertEqual(repo_tuple.url, 'http://cdn.redhat.com/foo/bar/images/')
         self.assertEqual(repo_tuple.url_path, '/foo/bar/images/')
 
-        # only v1 metadata file contains images and tags information,
-        # hence need to check name of the tuple
-        if repo_tuple.__class__.__name__=='Repo':
-            images = json.loads(repo_tuple.images_json)
-            self.assertTrue({'id': 'abc123'} in images)
-            self.assertTrue({'id': 'xyz789'} in images)
-            tags = json.loads(repo_tuple.tags_json)
-            self.assertEqual(tags.get('latest'), 'abc123')
+        images = json.loads(repo_tuple.images_json)
+        self.assertTrue({'id': 'abc123'} in images)
+        self.assertTrue({'id': 'xyz789'} in images)
+        tags = json.loads(repo_tuple.tags_json)
+        self.assertEqual(tags.get('latest'), 'abc123')
 
     def test_wrong_version(self):
         self.assertRaises(ValueError, data.load_from_file, demo_data.wrong_version_path)
