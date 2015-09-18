@@ -63,7 +63,8 @@ def monitor_data_dir(app, last_modified=0):
                             after this time, it must be re-loaded.
     :type  last_modified:   int or float
     """
-    data_dir = app.config[config.KEY_DATA_DIR]
+    data_dir = app.config[config.KEY_DATA_DIR] if 'OPENSHIFT_APP_NAME' not in os.environ \
+        else 'app-root/repo/crane/data'
     polling_interval = app.config[config.KEY_DATA_POLLING_INTERVAL]
     if not os.path.exists(data_dir):
         logging.error('The data directory specified does not exist: %s' % data_dir)

@@ -1,11 +1,10 @@
 import httplib
 import logging
 from functools import wraps
+import os
 
 from flask import json, request
 from rhsm import certificate
-from rhsm import certificate2
-
 from crane import exceptions
 from crane import data
 
@@ -127,11 +126,14 @@ def _get_certificate():
     pem_str = env.get('SSL_CLIENT_CERT', '')
     if not pem_str:
         return None
-    cert = certificate.create_from_pem(pem_str)
-    # The certificate may not be an entitlement certificate in which case we also return None
-    if not isinstance(cert, certificate2.EntitlementCertificate):
-        return None
-    return cert
+    if 'OPENSHIFT_APP_NAME' not in os.environ:
+        from rhsm import certificate
+        from rhsm import certificate2
+        cert = certificate.create_from_pem(pem_str)
+        # The certificate may not be an entitlement certificate in which case we also return None
+        if not isinstance(cert, certificate2.EntitlementCertificate):
+            return None
+        return cert
 
 
 def get_data():
