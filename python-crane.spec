@@ -6,7 +6,7 @@
 
 Name: python-crane
 Version: 1.2.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: docker-registry-like API with redirection, as a wsgi app
 
 License: GPLv2
@@ -80,6 +80,12 @@ fi
 
 
 %changelog
+* Wed Sep 30 2015 A.P. Rajshekhar <randalap@redhat.com> 1.2.0-2
+- Branching for release (randalap@redhat.com)
+
+* Wed Sep 30 2015 A.P.Rajshekhar - 1.2.0-2
+- rebuilt
+
 * Fri Nov 21 2014 Chris Duryee <cduryee@redhat.com> 0.2.2-1
 - Bump release to 1 (cduryee@redhat.com)
 
