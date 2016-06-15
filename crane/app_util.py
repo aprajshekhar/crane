@@ -67,13 +67,21 @@ def repo_is_authorized(repo_id):
 
     # if this deployment of this app does not know about the requested repo
     if repo_tuple is None:
+        logger.info('repo data for %s not found ' % repo_id)
         raise exceptions.HTTPError(httplib.NOT_FOUND)
 
     if repo_tuple.protected:
         cert = _get_certificate()
-        if not cert or not cert.check_path(repo_tuple.url_path):
+        logger.info('cert when checking repo %s' % cert)
+        value = repo_tuple.url_path
+        logger.info('path before check %s' % value)
+        if 'webassets/docker' in value:
+            value = value[len('webassets/docker')+1:]
+        logger.info('path after check %s' % value)
+        if not cert or not cert.check_path(value):
             # return 404 so we don't reveal the existence of repos that the user
             # is not authorized for
+            logger.info('repo %s is protected and client is not authorized to access it' % value)
             raise exceptions.HTTPError(httplib.NOT_FOUND)
 
 
@@ -107,9 +115,18 @@ def authorize_image_id(func):
             if not repo_tuple.protected:
                 found_match = True
                 break
-            elif cert and cert.check_path(repo_tuple.url_path):
-                found_match = True
-                break
+            elif repo_tuple.protected:
+                # this is a hack. Need to streamline it before V2 release
+                logger.info('cert when checking image %s' % cert)
+                value = repo_tuple.url_path
+                logger.info('path before check for images %s' % value)
+                if 'webassets/docker' in value:
+                    value = value[len('webassets/docker') + 1:]
+                logger.info('path after check images %s' % value)
+                if cert and cert.check_path(value):
+                    found_match = True
+                    logger.info('The requested path is protected and the client can access it')
+                    break
 
         if not found_match:
             # return 404 so we don't reveal the existence of images that the user
@@ -128,12 +145,16 @@ def _get_certificate():
     :rtype: rhsm.certificate2.EntitlementCertificate, or None
     """
     env = request.environ
+    logger.info('env of apache for current request %s' % env)
     pem_str = env.get('SSL_CLIENT_CERT', '')
     if not pem_str:
+        logger.info('No PEM string found for path  %s for scheme %s' % (request.environ.get('PATH_INFO', ''), env.get('wsgi.url_scheme','')))
         return None
     cert = certificate.create_from_pem(pem_str)
+    logger.info('cert is of type %s' % cert)
     # The certificate may not be an entitlement certificate in which case we also return None
     if not isinstance(cert, certificate2.EntitlementCertificate):
+        logger.info('Entitlement cert not found')
         return None
     return cert
 
@@ -172,7 +193,7 @@ def get_repositories():
     """
     Get the current data used for processing requests from the flask request context
     and format it to display basic information about image ids and tags associated
-    with each repository.
+    with each v1 repository.
 
     Value corresponding to each key(repo-registry-id) is a dictionary itself
     with the following format:
@@ -191,6 +212,26 @@ def get_repositories():
         relevant_repo_data[repo_registry_id] = {'image_ids': image_ids,
                                                 'tags': json.loads(repo.tags_json),
                                                 'protected': repo.protected}
+
+    return relevant_repo_data
+
+
+def get_v2_repositories():
+    """
+    Get the current data used for processing requests from the flask request context
+    and format it to display basic information about v2 repository.
+
+    Value corresponding to each key(repo-registry-id) is a dictionary itself
+    with the following format:
+    {'protected': true/false}
+
+    :return: dictionary keyed by repo-registry-ids
+    :rtype: dict
+    """
+    all_repo_data_v2 = get_v2_data().get('repos', {})
+    relevant_repo_data = {}
+    for repo_registry_id, repo in all_repo_data_v2.items():
+        relevant_repo_data[repo_registry_id] = {'protected': repo.protected}
 
     return relevant_repo_data
 
@@ -240,9 +281,16 @@ def name_is_authorized(name):
 
     if v2_repo_tuple.protected:
         cert = _get_certificate()
-        if not cert or not cert.check_path(v2_repo_tuple.url_path):
+        logger.info('cert when checking repo %s' % cert)
+        value = v2_repo_tuple.url_path
+        logger.info('path before check %s' % value)
+        if 'webassets/docker' in value:
+            value = value[len('webassets/docker') + 1:]
+        logger.info('path after check %s' % value)
+        if not cert or not cert.check_path(value):
             # return 404 so we don't reveal the existence of repos that the user
             # is not authorized for
+            logger.info('repo %s is protected and client is not authorized to access it' % value)
             raise exceptions.HTTPError(httplib.NOT_FOUND)
 
 

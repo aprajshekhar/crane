@@ -29,9 +29,10 @@ class TestSearch(BaseSolrTest):
         mock_parse.assert_called_once_with(self.url.format('hi%20mom'))
 
     @mock.patch('crane.search.solr.Solr._filter_result', spec_set=True, return_value=True)
+    @mock.patch('crane.search.solr.Solr._filter_result_v2', spec_set=True, return_value=True)
     @mock.patch('crane.search.solr.Solr._get_data', spec_set=True)
     @mock.patch('crane.search.solr.Solr._parse')
-    def test_workflow_filter_true(self, mock_parse, mock_get_data, mock_filter):
+    def test_workflow_filter_true(self, mock_parse, mock_get_data, mock_filter, mock_filter_v2):
         mock_parse.return_value = [
             SearchResult('rhel', 'Red Hat Enterprise Linux',
                          True, True, 5, True)]
@@ -49,9 +50,10 @@ class TestSearch(BaseSolrTest):
         })
 
     @mock.patch('crane.search.solr.Solr._filter_result', spec_set=True, return_value=False)
+    @mock.patch('crane.search.solr.Solr._filter_result_v2', spec_set=True, return_value=False)
     @mock.patch('crane.search.solr.Solr._get_data', spec_set=True)
     @mock.patch('crane.search.solr.Solr._parse')
-    def test_workflow_filter_true_with_defaults(self, mock_parse, mock_get_data, mock_filter):
+    def test_workflow_filter_true_with_defaults(self, mock_parse, mock_get_data, mock_filter, mock_filter_v2):
         mock_parse.return_value = [SearchResult('rhel', 'Red Hat Enterprise Linux',
                                                 **SearchResult.result_defaults)]
 
@@ -102,6 +104,21 @@ class TestSearch(BaseSolrTest):
         ret_val = self.solr._filter_result(result)
         self.assertEquals(ret_val, True)
 
+    @mock.patch('crane.app_util.name_is_authorized', spec_set=True)
+    def test_workflow_filter_false_with_should_filter_v2_false(self, mock_is_authorized):
+        """
+        When the should_filter_v2 attribute of SearchResult instance is True,
+        the base implementation of the filter_results should be called and
+        the return value should be based on the value returned/exception raised
+        by the mocked app_util.repo_is_authorized
+        """
+        mock_is_authorized.side_effect = exceptions.HTTPError(
+            httplib.NOT_FOUND)
+        result = SearchResult(
+            'rhel', 'Red Hat Enterprise Linux', False, False, 0, False)
+        ret_val = self.solr._filter_result_v2(result)
+        self.assertEquals(ret_val, True)
+
     @mock.patch('crane.app_util.repo_is_authorized', spec_set=True)
     def test_workflow_filter_true_with_image_repository_with_defaults(self, mock_is_authorized):
         """
@@ -111,6 +128,17 @@ class TestSearch(BaseSolrTest):
         result = SearchResult('rhel', 'Red Hat Enterprise Linux',
                               **SearchResult.result_defaults)
         ret_val = self.solr._filter_result(result)
+        self.assertEquals(ret_val, True)
+
+    @mock.patch('crane.app_util.name_is_authorized', spec_set=True)
+    def test_workflow_filter_true_with_image_repository_with_defaults(self, mock_is_authorized):
+        """
+        When the should_filter_v2 attribute of SearchResult instance is default which is False,
+        the base implementation of the filter_results is not called
+        """
+        result = SearchResult('rhel', 'Red Hat Enterprise Linux',
+                              **SearchResult.result_defaults)
+        ret_val = self.solr._filter_result_v2(result)
         self.assertEquals(ret_val, True)
 
 

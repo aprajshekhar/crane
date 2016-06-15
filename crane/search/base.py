@@ -64,6 +64,23 @@ class SearchBackend(object):
             return False
         return True
 
+    def _filter_result_v2(self, result):
+        """
+        Determines if a given result object, which represents a repository, is
+        both known by this app (aka we have it in the app data), and if the user
+        is authorized to access it.
+
+        :param result:  one search result
+        :type  result:  SearchResult
+        :return:    True iff the repository is known and the user is authorized,
+                    else False
+        :rtype:     bool
+        """
+        try:
+            app_util.name_is_authorized(result.name)
+        except exceptions.HTTPError:
+            return False
+        return True
 
 class HTTPBackend(SearchBackend):
     """
@@ -92,7 +109,7 @@ class HTTPBackend(SearchBackend):
         """
         try:
             # one second timeout
-            response = urllib2.urlopen(url, timeout=1)
+            response = urllib2.urlopen(url, timeout=30)
         except socket.timeout:
             _logger.error('timeout communicating with backend search service')
             raise exceptions.HTTPError(httplib.GATEWAY_TIMEOUT)

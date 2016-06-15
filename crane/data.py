@@ -23,6 +23,9 @@ v2_response_data = {
 
 V1Repo = namedtuple('V1Repo', ['url', 'images_json', 'tags_json', 'url_path', 'protected'])
 V2Repo = namedtuple('V2Repo', ['url', 'url_path', 'protected'])
+V3Repo = namedtuple('V3Repo', ['url', 'url_path', 'schema2_data', 'protected'])
+V4Repo = namedtuple('V4Repo', ['url', 'url_path', 'schema2_data', 'manifest_list_data',
+                               'manifest_list_amd64_tags', 'protected'])
 
 
 def load_from_file(path):
@@ -43,8 +46,7 @@ def load_from_file(path):
     with open(path) as json_file:
         repo_data = json.load(json_file)
 
-    # for now, we only support version 1 of the metadata schema
-    if repo_data['version'] not in (1, 2):
+    if repo_data['version'] not in (1, 2, 3, 4):
         raise ValueError('metadata version %d not supported' % repo_data['version'])
 
     repo_id = repo_data['repo-registry-id']
@@ -60,6 +62,20 @@ def load_from_file(path):
     elif repo_data['version'] == 2:
         repo_tuple = V2Repo(repo_data['url'],
                             url_path, repo_data.get('protected', False))
+        return repo_id, repo_tuple, None
+    elif repo_data['version'] == 3:
+        repo_tuple = V3Repo(repo_data['url'],
+                            url_path,
+                            json.dumps(repo_data['schema2_data']),
+                            repo_data.get('protected', False))
+        return repo_id, repo_tuple, None
+    elif repo_data['version'] == 4:
+        repo_tuple = V4Repo(repo_data['url'],
+                            url_path,
+                            json.dumps(repo_data['schema2_data']),
+                            json.dumps(repo_data['manifest_list_data']),
+                            json.dumps(repo_data['manifest_list_amd64_tags']),
+                            repo_data.get('protected', False))
         return repo_id, repo_tuple, None
 
 
@@ -152,19 +168,21 @@ def load_all(app):
         logger.info('loading metadata from %s' % data_dir)
         # scan data dir recursively and pick json files
         paths = [os.path.join(dirpath, f)
-                 for dirpath, dirnames, files in os.walk(data_dir)
+                 for dirpath, dirnames, files in os.walk(data_dir,
+                                                         followlinks=True)
                  for f in fnmatch.filter(files, '*.json')]
-
         # load data from each file
         for metadata_file_path in paths:
-            repo_id, repo_tuple, image_ids = load_from_file(metadata_file_path)
-            if isinstance(repo_tuple, V1Repo):
-                v1_repos[repo_id] = repo_tuple
-                for image_id in image_ids:
-                    images.setdefault(image_id, set()).add(repo_id)
-            else:
-                v2_repos[repo_id] = repo_tuple
-
+            try:
+                repo_id, repo_tuple, image_ids = load_from_file(metadata_file_path)
+                if isinstance(repo_tuple, V1Repo):
+                    v1_repos[repo_id] = repo_tuple
+                    for image_id in image_ids:
+                        images.setdefault(image_id, set()).add(repo_id)
+                else:
+                    v2_repos[repo_id] = repo_tuple
+            except Exception, e:
+                logger.error('skipping current metadata load: %s' % str(e))
         # make each set immutable
         for image_id in images.keys():
             images[image_id] = frozenset(images[image_id])

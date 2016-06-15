@@ -25,6 +25,7 @@ class Solr(HTTPBackend):
         """
         Searches a Solr search backend based on a given query parameter.
 
+        :param is_v2:
         :param query:   a string representing the search input from a user that
                         should be passed through to the solr backend
         :type  query:   basestring
@@ -42,7 +43,7 @@ class Solr(HTTPBackend):
         body = self._get_data(url)
 
         results = self._parse(body)
-        filtered_results = itertools.ifilter(self._filter_result, results)
+        filtered_results = itertools.ifilter(self._filter_result_v2, results)
         return itertools.imap(self._format_result, filtered_results)
 
     def _parse(self, body):
@@ -96,5 +97,21 @@ class Solr(HTTPBackend):
         """
         if result.should_filter:
             return super(Solr, self)._filter_result(result)
+        else:
+            return True
+
+    def _filter_result_v2(self, result):
+        """
+        Overrides _filter_result of HTTPBackend. If the result object does not represent an ISV
+        repository, authorize it otherwise skip authorization
+
+        :param result:  one search result
+        :type  result:  SearchResult
+        :return:    True if either the repository is known and the user is authorized or
+                    if authorization can be skipped else False
+        :rtype:     bool
+        """
+        if result.should_filter:
+            return super(Solr, self)._filter_result_v2(result)
         else:
             return True

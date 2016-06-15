@@ -73,6 +73,27 @@ class TestSearchBackend(unittest2.TestCase):
         self.assertIs(ret, False)
         mock_is_authorized.assert_called_once_with(result.name)
 
+    @mock.patch('crane.app_util.name_is_authorized', spec_set=True)
+    def test_filter_authorized_result_v2(self, mock_is_authorized):
+        result = base.SearchResult('rhel', 'Red Hat Enterprise Linux',
+                                   **base.SearchResult.result_defaults)
+
+        ret = self.backend._filter_result_v2(result)
+
+        self.assertIs(ret, True)
+        mock_is_authorized.assert_called_once_with(result.name)
+
+    @mock.patch('crane.app_util.name_is_authorized', spec_set=True)
+    def test_filter_nonauthorized_result_v2(self, mock_is_authorized):
+        result = base.SearchResult('rhel', 'Red Hat Enterprise Linux',
+                                   **base.SearchResult.result_defaults)
+        mock_is_authorized.side_effect = exceptions.HTTPError(httplib.NOT_FOUND)
+
+        ret = self.backend._filter_result_v2(result)
+
+        self.assertIs(ret, False)
+        mock_is_authorized.assert_called_once_with(result.name)
+
 
 @mock.patch('urllib2.urlopen', spec_set=True)
 class TestHTTPBackend(unittest2.TestCase):
@@ -89,7 +110,7 @@ class TestHTTPBackend(unittest2.TestCase):
         ret = self.backend._get_data(self.url)
 
         # make sure the correct args were passed through
-        mock_urlopen.assert_called_once_with(self.url, timeout=1)
+        mock_urlopen.assert_called_once_with(self.url, timeout=30)
         # make sure the response body is returned
         self.assertIs(ret, mock_urlopen.return_value.read.return_value)
 

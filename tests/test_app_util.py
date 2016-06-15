@@ -6,7 +6,7 @@ import unittest2 as unittest
 
 from crane import app_util
 from crane import exceptions
-from crane.data import V1Repo
+from crane.data import V1Repo, V2Repo, V3Repo
 import demo_data
 
 from views import base
@@ -67,6 +67,13 @@ class TestAuthorizeRepoId(FlaskContextBase):
         self.assertEquals(result, 'foo')
 
     @mock.patch('crane.app_util._get_certificate')
+    def test_passes_if_auth_valid_webassets(self, mock_get_cert):
+        cert = certificate.create_from_file(demo_data.demo_entitlement_cert_path)
+        mock_get_cert.return_value = cert
+        result = mock_repo_func('foo/webassets')
+        self.assertEquals(result, 'foo')
+
+    @mock.patch('crane.app_util._get_certificate')
     def test_bypass_if_not_protected(self, mock_get_cert):
         cert = certificate.create_from_file(demo_data.demo_entitlement_cert_path)
         mock_get_cert.return_value = cert
@@ -116,6 +123,14 @@ class TestAuthorizeName(FlaskContextBase):
         cert.check_path = mock.Mock(return_value=True)
         mock_get_cert.return_value = cert
         result = mock_name_func('protected')
+        self.assertEquals(result, 'foo')
+
+    @mock.patch('crane.app_util._get_certificate')
+    def test_if_protected_webassets(self, mock_get_cert):
+        cert = certificate.create_from_file(demo_data.demo_entitlement_cert_path)
+        cert.check_path = mock.Mock(return_value=True)
+        mock_get_cert.return_value = cert
+        result = mock_name_func('barwebassets')
         self.assertEquals(result, 'foo')
 
     @mock.patch('crane.app_util._get_certificate')
@@ -172,6 +187,13 @@ class TestAuthorizeImageId(FlaskContextBase):
         cert = certificate.create_from_file(demo_data.demo_entitlement_cert_path)
         mock_get_cert.return_value = cert
         result = mock_image_func('baz123')
+        self.assertEquals(result, 'foo')
+
+    @mock.patch('crane.app_util._get_certificate')
+    def test_passes_if_auth_valid_webassets(self, mock_get_cert):
+        cert = certificate.create_from_file(demo_data.demo_entitlement_cert_path)
+        mock_get_cert.return_value = cert
+        result = mock_image_func('foowebassets123')
         self.assertEquals(result, 'foo')
 
     @mock.patch('crane.app_util._get_certificate')
@@ -276,4 +298,22 @@ class TestValidateGetRepositories(unittest.TestCase):
     def test_get_repositories_empty(self, mock_get_data):
         mock_get_data.return_value = {'repos': {}}
         ret = app_util.get_repositories()
+        self.assertEqual(ret, {})
+
+
+class TestValidateGetV2Repositories(unittest.TestCase):
+
+    @mock.patch('crane.app_util.get_v2_data')
+    def test_get_v2_repositories(self, mock_get_v2_data):
+        repo = V2Repo(url="", url_path="", protected=True)
+        repo2 = V3Repo(url="", url_path="", schema2_data=[], protected=False)
+        mock_get_v2_data.return_value = {'repos': {'test-repo': repo, 'test-repo2': repo2}}
+        ret = app_util.get_v2_repositories()
+        self.assertEqual(ret['test-repo']['protected'], True)
+        self.assertEqual(ret['test-repo2']['protected'], False)
+
+    @mock.patch('crane.app_util.get_v2_data')
+    def test_get_v2_repositories_empty(self, mock_get_v2_data):
+        mock_get_v2_data.return_value = {'repos': {}}
+        ret = app_util.get_v2_repositories()
         self.assertEqual(ret, {})
