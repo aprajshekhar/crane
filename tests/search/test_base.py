@@ -110,7 +110,7 @@ class TestHTTPBackend(unittest2.TestCase):
         ret = self.backend._get_data(self.url)
 
         # make sure the correct args were passed through
-        mock_urlopen.assert_called_once_with(self.url, timeout=1)
+        mock_urlopen.assert_called_once_with(self.url, timeout=30)
         # make sure the response body is returned
         self.assertIs(ret, mock_urlopen.return_value.read.return_value)
 

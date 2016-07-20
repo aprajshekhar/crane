@@ -109,7 +109,7 @@ class HTTPBackend(SearchBackend):
         """
         try:
             # one second timeout
-            response = urllib2.urlopen(url, timeout=1)
+            response = urllib2.urlopen(url, timeout=30)
         except socket.timeout:
             _logger.error('timeout communicating with backend search service')
             raise exceptions.HTTPError(httplib.GATEWAY_TIMEOUT)

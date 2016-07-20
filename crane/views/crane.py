@@ -27,9 +27,10 @@ def repositories_v2():
 
 
 @section.route('/repositories')
-def repositories_v1():
+@section.route('/repositories/v1')
+def repositories():
     """
-    Returns a json document containing a dictionary of repositories served by crane
+    Returns a json document containing a dictionary of v1 repositories served by crane
     and keyed by the repo-registry-id which is unique for each repository.
 
     :return:    json string containing a list of docker repositories
