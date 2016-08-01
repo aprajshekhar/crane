@@ -32,7 +32,7 @@ def add_common_headers(response):
     return response
 
 
-# @section.route('/')
+@section.route('/')
 def v2():
     """
     Provides version support information for /v2 requests.
@@ -64,7 +64,7 @@ def name_redirect(relative_path):
     return redirect(url)
 
 
-# @section.errorhandler(exceptions.HTTPError)
+@section.errorhandler(exceptions.HTTPError)
 def handle_error(error):
     """
     Creates a v2 compatible error response.
