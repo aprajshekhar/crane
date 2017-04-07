@@ -94,6 +94,26 @@ class TestSearchBackend(unittest2.TestCase):
         self.assertIs(ret, False)
         mock_is_authorized.assert_called_once_with(result.name)
 
+    @mock.patch('crane.app_util.name_is_known', spec_set=True)
+    def test_filter_is_v2_without_auth_check(self, mock_is_known):
+        result = base.SearchResult('rhel', 'Red Hat Enterprise Linux',
+                                   **base.SearchResult.result_defaults)
+
+        ret = self.backend._filter_result_v2_without_auth_check(result)
+
+        self.assertIs(ret, True)
+        mock_is_known.assert_called_once_with(result.name)
+
+    @mock.patch('crane.app_util.name_is_known', spec_set=True)
+    def test_filter_is_v2_without_auth_check_name_not_known(self, mock_is_known):
+        result = base.SearchResult('rhel', 'Red Hat Enterprise Linux',
+                                   **base.SearchResult.result_defaults)
+        mock_is_known.side_effect = exceptions.HTTPError(httplib.NOT_FOUND)
+        ret = self.backend._filter_result_v2_without_auth_check(result)
+
+        self.assertIs(ret, False)
+        mock_is_known.assert_called_once_with(result.name)
+
 
 @mock.patch('urllib2.urlopen', spec_set=True)
 class TestHTTPBackend(unittest2.TestCase):

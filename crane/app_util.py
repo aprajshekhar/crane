@@ -274,6 +274,7 @@ def name_is_authorized(name):
     """
     v2_response_data = get_v2_data()
     v2_repo_tuple = v2_response_data['repos'].get(name)
+    print v2_repo_tuple
 
     # if this deployment of this app does not know about the requested repo
     if v2_repo_tuple is None:
@@ -292,6 +293,26 @@ def name_is_authorized(name):
             # is not authorized for
             logger.info('repo %s is protected and client is not authorized to access it' % value)
             raise exceptions.HTTPError(httplib.NOT_FOUND)
+
+
+def name_is_known(name):
+    """
+    Determines if the current request can read the given repo name.
+
+    :param name: name of the repository being accessed
+    :type  name: basestring
+
+    :raises exceptions.HTTPError: 404: if the repo does not exist in this app
+    """
+    v2_response_data = get_v2_data()
+    print v2_response_data
+    v2_repo_tuple = v2_response_data['repos'].get(name)
+
+    # if this deployment of this app does not know about the requested repo
+    if v2_repo_tuple is None:
+        raise exceptions.HTTPError(httplib.NOT_FOUND)
+
+    return True
 
 
 def authorize_name(func):

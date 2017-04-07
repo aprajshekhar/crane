@@ -82,6 +82,24 @@ class SearchBackend(object):
             return False
         return True
 
+    def _filter_result_v2_without_auth_check(self, result):
+        """
+        Determines if a given result object, which represents a repository, is
+        both known by this app (aka we have it in the app data).
+
+        :param result:  one search result
+        :type  result:  SearchResult
+        :return:    True iff the repository is known,
+                    else False
+        :rtype:     bool
+        """
+        try:
+            app_util.name_is_known(result.name)
+        except exceptions.HTTPError:
+            return False
+        return True
+
+
 class HTTPBackend(SearchBackend):
     """
     This provides functionality that may be useful across different search

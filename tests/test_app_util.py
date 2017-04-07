@@ -147,6 +147,23 @@ class TestAuthorizeName(FlaskContextBase):
         self.assertEqual(assertion.exception.status_code, httplib.NOT_FOUND)
 
 
+class TestNameIsKnown(FlaskContextBase):
+
+    def test_raises_not_found_if_repo_id_none(self):
+        with self.assertRaises(exceptions.HTTPError) as assertion:
+            app_util.name_is_known(None)
+        self.assertEqual(assertion.exception.status_code, httplib.NOT_FOUND)
+
+    def test_raises_not_found_if_repo_id_invalid(self):
+        with self.assertRaises(exceptions.HTTPError) as assertion:
+            app_util.name_is_known('maz')
+        self.assertEqual(assertion.exception.status_code, httplib.NOT_FOUND)
+
+    def test_repo_id_valid(self):
+        result = app_util.name_is_known('v2/bar')
+        self.assertTrue(result, 'name should be known')
+
+
 class TestAuthorizeImageId(FlaskContextBase):
 
     def test_raises_not_found_if_image_id_none(self):
