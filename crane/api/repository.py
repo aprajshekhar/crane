@@ -40,3 +40,57 @@ def get_path_for_repo(repo_id):
     :rtype: basestring
     """
     return get_v2_data()['repos'][repo_id].url
+
+
+@authorize_name
+def get_schema2_data_for_repo(repo_id):
+    """
+    Return the schema2 data for the repository.
+
+    :param repo_id: The identifier/name for the repository
+    :type repo_id: basestring
+    :returns: schema2 data for the repo
+    :rtype: list
+    """
+    repo = get_v2_data()['repos'][repo_id]
+    try:
+        schema2_data = repo.schema2_data
+    except AttributeError:
+        schema2_data = None
+    return schema2_data
+
+
+@authorize_name
+def get_manifest_list_data_for_repo(repo_id):
+    """
+    Return the manifest list data for the repository.
+
+    :param repo_id: The identifier/name for the repository
+    :type repo_id: basestring
+    :returns: manifest list data for the repo
+    :rtype: list
+    """
+    repo = get_v2_data()['repos'][repo_id]
+    try:
+        manifest_list_data = repo.manifest_list_data
+    except AttributeError:
+        manifest_list_data = []
+    return manifest_list_data
+
+
+@authorize_name
+def get_manifest_list_amd64_for_repo(repo_id):
+    """
+    Return the manifest list amd64 tags for the repository.
+
+    :param repo_id: The identifier/name for the repository
+    :type repo_id: basestring
+    :returns: manifest list amd64 tags for the repo
+    :rtype: dict
+    """
+    repo = get_v2_data()['repos'][repo_id]
+    try:
+        manifest_list_amd64_tags = repo.manifest_list_amd64_tags
+    except AttributeError:
+        manifest_list_amd64_tags = {}
+    return manifest_list_amd64_tags
